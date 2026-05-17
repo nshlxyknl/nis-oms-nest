@@ -1,8 +1,7 @@
 import { UserRole } from '../../types/enums';
 
-export class User {
-  id: number;
+export class RegisterDto {
   username: string;
   password: string;
-  role: UserRole;
+  role?: UserRole;
 }
