@@ -41,11 +41,11 @@ export class AuthService {
     const access_token = this.jwtService.sign(payload);
 
     return {
-      message: 'Login successful',
       access_token,
       user: {
         id: user.id,
         username: user.username,
+        name: user.name || user.username,
         role: user.role,
       },
     };
@@ -71,6 +71,7 @@ export class AuthService {
       data: {
         username: registerDto.username,
         password: hashedPassword,
+        name: registerDto.name || registerDto.username,
         role: registerDto.role || UserRole.user, // Default to 'user' role
       },
     });
@@ -82,17 +83,31 @@ export class AuthService {
     const access_token = this.jwtService.sign(payload);
 
     return {
-      message: 'Registration successful',
       access_token,
-      user: result,
+      user: {
+        id: result.id,
+        username: result.username,
+        name: result.name || result.username,
+        role: result.role,
+      },
     };
   }
 
   async getProfile(userId: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, username: true, name: true, role: true },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
     return {
-      id: userId,
-      username: 'testuser',
-      role: 'user'
+      id: user.id,
+      username: user.username,
+      name: user.name || user.username,
+      role: user.role,
     };
   }
 }

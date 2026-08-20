@@ -51,6 +51,17 @@ export class AuthController {
     }
   }
 
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  async getMe(@Request() req) {
+    try {
+      return await this.authService.getProfile(req.user.id);
+    } catch (error) {
+      console.error('Profile error:', error);
+      throw new HttpException('Internal server error', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   @Post('logout')
   async logout() {
     return { message: 'Logged out successfully' };

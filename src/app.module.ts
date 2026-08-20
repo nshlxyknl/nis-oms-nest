@@ -8,6 +8,9 @@ import { EmployeesModule } from './employees/employees.module';
 import { AssetsModule } from './assets/assets.module';
 import { RoomsModule } from './rooms/rooms.module';
 import { NoticesModule } from './notices/notices.module';
+import { LeavesModule } from './leaves/leaves.module';
+import { RoomBookingsModule } from './room-bookings/room-bookings.module';
+import { AssetRequestsModule } from './asset-requests/asset-requests.module';
 
 @Module({
   imports: [
@@ -17,7 +20,7 @@ import { NoticesModule } from './notices/notices.module';
     EmployeesModule, 
     AssetsModule, 
     RoomsModule, 
-    NoticesModule
+    NoticesModule, LeavesModule, RoomBookingsModule, AssetRequestsModule
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -6,11 +6,108 @@ datasource db {
   provider = "postgresql"
 }
 
+// ============ MODELS ============
 model User {
-  id       Int      @id @default(autoincrement())
-  password String
-  username String   @unique
-  role     UserRole @default(user)
+  id              Int             @id @default(autoincrement())
+  password        String
+  username        String          @unique
+  name            String?
+  role            UserRole        @default(user)
+  status          EmployeeStatus  @default(active)
+  department      String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @default(now()) @updatedAt
+  
+  // Relations
+  leavesRequested Leave[]         @relation("LeaveRequester")
+  leavesApproved  Leave[]         @relation("LeaveApprover")
+  roomBookings    RoomBooking[]   @relation("UserBookings")
+  approvedBookings RoomBooking[]  @relation("ApprovedBookings")
+  assetRequests   AssetRequest[]  @relation("UserAssets")
+  approvedAssets  AssetRequest[]  @relation("ApprovedAssets")
+  assignedAssets  Asset[]
+}
+
+model Leave {
+  id          Int          @id @default(autoincrement())
+  userId      Int
+  leaveType   LeaveType
+  startDate   DateTime
+  endDate     DateTime
+  days        Int
+  reason      String?
+  status      LeaveStatus  @default(pending)
+  approvedBy  Int?
+  approvedAt  DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  
+  user        User         @relation("LeaveRequester", fields: [userId], references: [id], onDelete: Cascade)
+  approver    User?        @relation("LeaveApprover", fields: [approvedBy], references: [id])
+}
+
+model Room {
+  id          Int           @id @default(autoincrement())
+  name        String        @unique
+  capacity    Int
+  location    String?
+  equipment   String?
+  status      RoomStatus    @default(available)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  
+  bookings    RoomBooking[]
+}
+
+model RoomBooking {
+  id          Int                 @id @default(autoincrement())
+  roomId      Int
+  userId      Int
+  purpose     String?
+  startTime   DateTime
+  endTime     DateTime
+  status      RoomBookingStatus   @default(pending)
+  approvedBy  Int?
+  approvedAt  DateTime?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  
+  room        Room                @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user        User                @relation("UserBookings", fields: [userId], references: [id], onDelete: Cascade)
+  approver    User?               @relation("ApprovedBookings", fields: [approvedBy], references: [id])
+}
+
+model Asset {
+  id          Int            @id @default(autoincrement())
+  name        String
+  type        String
+  description String?
+  category    String?
+  value       Float?
+  location    String?
+  status      AssetStatus    @default(available)
+  assignedToId Int?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  
+  assignedTo  User?          @relation(fields: [assignedToId], references: [id])
+  requests    AssetRequest[]
+}
+
+model AssetRequest {
+  id          Int                  @id @default(autoincrement())
+  assetId     Int
+  userId      Int
+  reason      String?
+  status      AssetRequestStatus   @default(pending)
+  approvedBy  Int?
+  approvedAt  DateTime?
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  
+  asset       Asset                @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  user        User                 @relation("UserAssets", fields: [userId], references: [id], onDelete: Cascade)
+  approver    User?                @relation("ApprovedAssets", fields: [approvedBy], references: [id])
 }
 
 model Employee {
@@ -25,55 +122,67 @@ model Employee {
   updatedAt   DateTime @updatedAt
 }
 
-model Asset {
-  id          Int      @id @default(autoincrement())
-  name        String
-  description String?
-  category    String
-  value       Float?
-  location    String?
-  status      AssetStatus @default(active)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-model Room {
-  id          Int      @id @default(autoincrement())
-  name        String
-  capacity    Int
-  location    String
-  equipment   String?
-  status      RoomStatus @default(available)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
 model Notice {
-  id          Int      @id @default(autoincrement())
+  id          Int            @id @default(autoincrement())
   title       String
   content     String
   priority    NoticePriority @default(normal)
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  isActive    Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
 }
 
+// ============ ENUMS ============
 enum UserRole {
   user
   admin
 }
 
-enum AssetStatus {
+enum EmployeeStatus {
   active
   inactive
-  maintenance
-  disposed
+  onLeave
+}
+
+enum LeaveType {
+  sick
+  casual
+  annual
+  unpaid
+  emergency
+}
+
+enum LeaveStatus {
+  pending
+  approved
+  rejected
 }
 
 enum RoomStatus {
   available
   occupied
   maintenance
+}
+
+enum RoomBookingStatus {
+  pending
+  approved
+  rejected
+  completed
+}
+
+enum AssetStatus {
+  available
+  assigned
+  maintenance
+  disposed
+}
+
+enum AssetRequestStatus {
+  pending
+  approved
+  rejected
+  returned
 }
 
 enum NoticePriority {

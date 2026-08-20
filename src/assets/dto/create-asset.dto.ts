@@ -1,8 +1,12 @@
+import { AssetStatus } from '@prisma/client';
+
 export class CreateAssetDto {
   name: string;
+  type: string;
   description?: string;
-  category: string;
+  category?: string;
   value?: number;
   location?: string;
-  status?: 'active' | 'inactive' | 'maintenance' | 'disposed';
+  status?: AssetStatus;
+  assignedToId?: number;
 }
