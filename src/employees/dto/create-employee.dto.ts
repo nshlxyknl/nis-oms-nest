@@ -1,8 +1,23 @@
+import { IsString, IsNotEmpty, IsOptional, IsEnum, MinLength } from 'class-validator';
+
 export class CreateEmployeeDto {
+  @IsString()
+  @IsNotEmpty()
+  username: string;
+
+  @IsString()
+  @MinLength(6)
+  password: string;
+
+  @IsString()
+  @IsNotEmpty()
   name: string;
-  email: string;
-  position: string;
-  department: string;
-  salary?: number;
-  hireDate?: Date;
+
+  @IsEnum(['user', 'admin'])
+  @IsOptional()
+  role?: string;
+
+  @IsString()
+  @IsOptional()
+  department?: string;
 }

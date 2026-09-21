@@ -79,6 +79,18 @@ export class LeavesController {
     return this.leavesService.approve(id, req.user.userId, approveLeaveDto.status);
   }
 
+  @Patch(':id/reject')
+  reject(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req
+  ) {
+    // Only admins can reject leaves
+    if (req.user.role !== UserRole.admin) {
+      throw new Error('Only admins can approve or reject leave requests');
+    }
+    return this.leavesService.approve(id, req.user.userId, 'rejected' as any);
+  }
+
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   remove(

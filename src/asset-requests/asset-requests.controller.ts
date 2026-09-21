@@ -100,6 +100,15 @@ export class AssetRequestsController {
     );
   }
 
+  @Patch(':id/reject')
+  reject(@Param('id', ParseIntPipe) id: number, @Request() req) {
+    // Only admins can reject requests
+    if (req.user.role !== UserRole.admin) {
+      throw new Error('Only admins can approve or reject asset requests');
+    }
+    return this.assetRequestsService.approve(id, req.user.userId, 'rejected' as any);
+  }
+
   @Patch(':id/return')
   returnAsset(@Param('id', ParseIntPipe) id: number, @Request() req) {
     return this.assetRequestsService.returnAsset(

@@ -29,6 +29,16 @@ export class EmployeesController {
     return this.employeesService.update(id, updateEmployeeDto);
   }
 
+  @Patch(':id/role')
+  updateRole(@Param('id', ParseIntPipe) id: number, @Body() body: { role: string }) {
+    return this.employeesService.updateRole(id, body.role);
+  }
+
+  @Patch(':id/status')
+  updateStatus(@Param('id', ParseIntPipe) id: number, @Body() body: { status: string }) {
+    return this.employeesService.updateStatus(id, body.status);
+  }
+
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.employeesService.remove(id);

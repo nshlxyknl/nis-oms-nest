@@ -103,6 +103,15 @@ export class RoomBookingsController {
     );
   }
 
+  @Patch(':id/reject')
+  reject(@Param('id', ParseIntPipe) id: number, @Request() req) {
+    // Only admins can reject bookings
+    if (req.user.role !== UserRole.admin) {
+      throw new Error('Only admins can approve or reject room bookings');
+    }
+    return this.roomBookingsService.approve(id, req.user.userId, 'rejected' as any);
+  }
+
   @Patch(':id/complete')
   complete(@Param('id', ParseIntPipe) id: number, @Request() req) {
     return this.roomBookingsService.complete(id, req.user.userId, req.user.role);
