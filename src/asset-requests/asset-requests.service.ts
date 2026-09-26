@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateAssetRequestDto } from './dto/create-asset-request.dto';
 import { UpdateAssetRequestDto } from './dto/update-asset-request.dto';
@@ -23,7 +28,7 @@ export class AssetRequestsService {
     // Check if asset is available
     if (asset.status !== AssetStatus.available) {
       throw new BadRequestException(
-        `Asset is not available. Current status: ${asset.status}`
+        `Asset is not available. Current status: ${asset.status}`,
       );
     }
 
@@ -38,7 +43,7 @@ export class AssetRequestsService {
 
     if (existingRequest) {
       throw new BadRequestException(
-        'You already have a pending request for this asset'
+        'You already have a pending request for this asset',
       );
     }
 
@@ -220,9 +225,9 @@ export class AssetRequestsService {
     id: number,
     userId: number,
     userRole: string,
-    updateAssetRequestDto: UpdateAssetRequestDto
+    updateAssetRequestDto: UpdateAssetRequestDto,
   ) {
-    const request = await this.prisma.assetRequest.findUnique({ 
+    const request = await this.prisma.assetRequest.findUnique({
       where: { id },
       include: { asset: true },
     });
@@ -233,11 +238,15 @@ export class AssetRequestsService {
 
     // Only the owner can update their request (and only if it's pending)
     if (request.userId !== userId) {
-      throw new ForbiddenException('You can only update your own asset requests');
+      throw new ForbiddenException(
+        'You can only update your own asset requests',
+      );
     }
 
     if (request.status !== AssetRequestStatus.pending) {
-      throw new BadRequestException('Cannot update asset request that has been processed');
+      throw new BadRequestException(
+        'Cannot update asset request that has been processed',
+      );
     }
 
     const { assetId, ...rest } = updateAssetRequestDto;
@@ -254,7 +263,7 @@ export class AssetRequestsService {
 
       if (newAsset.status !== AssetStatus.available) {
         throw new BadRequestException(
-          `Asset is not available. Current status: ${newAsset.status}`
+          `Asset is not available. Current status: ${newAsset.status}`,
         );
       }
     }
@@ -282,7 +291,7 @@ export class AssetRequestsService {
   async approve(id: number, approverId: number, status: AssetRequestStatus) {
     const request = await this.prisma.assetRequest.findUnique({
       where: { id },
-      include: { asset: true, user: true },
+      include: { asset: true, user: { omit: { password: true } } },
     });
 
     if (!request) {
@@ -297,7 +306,9 @@ export class AssetRequestsService {
       status !== AssetRequestStatus.approved &&
       status !== AssetRequestStatus.rejected
     ) {
-      throw new BadRequestException('Invalid status. Must be approved or rejected');
+      throw new BadRequestException(
+        'Invalid status. Must be approved or rejected',
+      );
     }
 
     // If approving, assign the asset to the user
@@ -313,7 +324,7 @@ export class AssetRequestsService {
 
       if (asset.status !== AssetStatus.available) {
         throw new BadRequestException(
-          `Asset is no longer available. Current status: ${asset.status}`
+          `Asset is no longer available. Current status: ${asset.status}`,
         );
       }
 
@@ -457,7 +468,9 @@ export class AssetRequestsService {
   }
 
   async remove(id: number, userId: number, userRole: string) {
-    const request = await this.prisma.assetRequest.findUnique({ where: { id } });
+    const request = await this.prisma.assetRequest.findUnique({
+      where: { id },
+    });
 
     if (!request) {
       throw new NotFoundException(`Asset request with ID ${id} not found`);
@@ -465,7 +478,9 @@ export class AssetRequestsService {
 
     // Only owner or admin can delete
     if (userRole !== UserRole.admin && request.userId !== userId) {
-      throw new ForbiddenException('You can only delete your own asset requests');
+      throw new ForbiddenException(
+        'You can only delete your own asset requests',
+      );
     }
 
     // Can only delete pending or rejected requests
@@ -474,7 +489,7 @@ export class AssetRequestsService {
       request.status !== AssetRequestStatus.rejected
     ) {
       throw new BadRequestException(
-        'Cannot delete approved or returned asset requests'
+        'Cannot delete approved or returned asset requests',
       );
     }
 
@@ -506,12 +521,17 @@ export class AssetRequestsService {
 
     const stats = {
       total: requests.length,
-      approved: requests.filter(r => r.status === AssetRequestStatus.approved).length,
-      pending: requests.filter(r => r.status === AssetRequestStatus.pending).length,
-      rejected: requests.filter(r => r.status === AssetRequestStatus.rejected).length,
-      returned: requests.filter(r => r.status === AssetRequestStatus.returned).length,
-      currentlyAssigned: requests.filter(r => r.status === AssetRequestStatus.approved)
+      approved: requests.filter((r) => r.status === AssetRequestStatus.approved)
         .length,
+      pending: requests.filter((r) => r.status === AssetRequestStatus.pending)
+        .length,
+      rejected: requests.filter((r) => r.status === AssetRequestStatus.rejected)
+        .length,
+      returned: requests.filter((r) => r.status === AssetRequestStatus.returned)
+        .length,
+      currentlyAssigned: requests.filter(
+        (r) => r.status === AssetRequestStatus.approved,
+      ).length,
     };
 
     return stats;
