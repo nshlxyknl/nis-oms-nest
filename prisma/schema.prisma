@@ -6,133 +6,124 @@ datasource db {
   provider = "postgresql"
 }
 
-// ============ MODELS ============
 model User {
-  id              Int             @id @default(autoincrement())
-  password        String
-  username        String          @unique
-  name            String?
-  role            UserRole        @default(user)
-  status          EmployeeStatus  @default(active)
-  department      String?
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @default(now()) @updatedAt
-  
-  // Relations
-  leavesRequested Leave[]         @relation("LeaveRequester")
-  leavesApproved  Leave[]         @relation("LeaveApprover")
-  roomBookings    RoomBooking[]   @relation("UserBookings")
+  id               Int            @id @default(autoincrement())
+  password         String
+  username         String         @unique
+  name             String?
+  role             UserRole       @default(user)
+  status           EmployeeStatus @default(active)
+  department       String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @default(now()) @updatedAt
+  assignedAssets   Asset[]
+  approvedAssets   AssetRequest[] @relation("ApprovedAssets")
+  assetRequests    AssetRequest[] @relation("UserAssets")
+  leavesApproved   Leave[]        @relation("LeaveApprover")
+  leavesRequested  Leave[]        @relation("LeaveRequester")
   approvedBookings RoomBooking[]  @relation("ApprovedBookings")
-  assetRequests   AssetRequest[]  @relation("UserAssets")
-  approvedAssets  AssetRequest[]  @relation("ApprovedAssets")
-  assignedAssets  Asset[]
+  roomBookings     RoomBooking[]  @relation("UserBookings")
 }
 
 model Leave {
-  id          Int          @id @default(autoincrement())
-  userId      Int
-  leaveType   LeaveType
-  startDate   DateTime
-  endDate     DateTime
-  days        Int
-  reason      String?
-  status      LeaveStatus  @default(pending)
-  approvedBy  Int?
-  approvedAt  DateTime?
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  
-  user        User         @relation("LeaveRequester", fields: [userId], references: [id], onDelete: Cascade)
-  approver    User?        @relation("LeaveApprover", fields: [approvedBy], references: [id])
+  id         Int         @id @default(autoincrement())
+  userId     Int
+  leaveType  LeaveType
+  startDate  DateTime
+  endDate    DateTime
+  days       Int
+  reason     String?
+  status     LeaveStatus @default(pending)
+  approvedBy Int?
+  approvedAt DateTime?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  approver   User?       @relation("LeaveApprover", fields: [approvedBy], references: [id])
+  user       User        @relation("LeaveRequester", fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Room {
-  id          Int           @id @default(autoincrement())
-  name        String        @unique
-  capacity    Int
-  location    String?
-  equipment   String?
-  status      RoomStatus    @default(available)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  
-  bookings    RoomBooking[]
+  id        Int           @id @default(autoincrement())
+  name      String        @unique
+  capacity  Int
+  location  String?
+  equipment String?
+  status    RoomStatus    @default(available)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  bookings  RoomBooking[]
 }
 
 model RoomBooking {
-  id          Int                 @id @default(autoincrement())
-  roomId      Int
-  userId      Int
-  purpose     String?
-  startTime   DateTime
-  endTime     DateTime
-  status      RoomBookingStatus   @default(pending)
-  approvedBy  Int?
-  approvedAt  DateTime?
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
-  
-  room        Room                @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  user        User                @relation("UserBookings", fields: [userId], references: [id], onDelete: Cascade)
-  approver    User?               @relation("ApprovedBookings", fields: [approvedBy], references: [id])
+  id         Int               @id @default(autoincrement())
+  roomId     Int
+  userId     Int
+  purpose    String?
+  startTime  DateTime
+  endTime    DateTime
+  status     RoomBookingStatus @default(pending)
+  approvedBy Int?
+  approvedAt DateTime?
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+  approver   User?             @relation("ApprovedBookings", fields: [approvedBy], references: [id])
+  room       Room              @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user       User              @relation("UserBookings", fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Asset {
-  id          Int            @id @default(autoincrement())
-  name        String
-  type        String
-  description String?
-  category    String?
-  value       Float?
-  location    String?
-  status      AssetStatus    @default(available)
+  id           Int            @id @default(autoincrement())
+  name         String
+  type         String
+  description  String?
+  category     String?
+  value        Float?
+  location     String?
+  status       AssetStatus    @default(available)
   assignedToId Int?
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-  
-  assignedTo  User?          @relation(fields: [assignedToId], references: [id])
-  requests    AssetRequest[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  assignedTo   User?          @relation(fields: [assignedToId], references: [id])
+  requests     AssetRequest[]
 }
 
 model AssetRequest {
-  id          Int                  @id @default(autoincrement())
-  assetId     Int
-  userId      Int
-  reason      String?
-  status      AssetRequestStatus   @default(pending)
-  approvedBy  Int?
-  approvedAt  DateTime?
-  createdAt   DateTime             @default(now())
-  updatedAt   DateTime             @updatedAt
-  
-  asset       Asset                @relation(fields: [assetId], references: [id], onDelete: Cascade)
-  user        User                 @relation("UserAssets", fields: [userId], references: [id], onDelete: Cascade)
-  approver    User?                @relation("ApprovedAssets", fields: [approvedBy], references: [id])
+  id         Int                @id @default(autoincrement())
+  assetId    Int
+  userId     Int
+  reason     String?
+  status     AssetRequestStatus @default(pending)
+  approvedBy Int?
+  approvedAt DateTime?
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+  approver   User?              @relation("ApprovedAssets", fields: [approvedBy], references: [id])
+  asset      Asset              @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  user       User               @relation("UserAssets", fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Employee {
-  id          Int      @id @default(autoincrement())
-  name        String
-  email       String   @unique
-  position    String
-  department  String
-  salary      Float?
-  hireDate    DateTime @default(now())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         Int      @id @default(autoincrement())
+  name       String
+  email      String   @unique
+  position   String
+  department String
+  salary     Float?
+  hireDate   DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 model Notice {
-  id          Int            @id @default(autoincrement())
-  title       String
-  content     String
-  priority    NoticePriority @default(normal)
-  isActive    Boolean        @default(true)
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  id        Int            @id @default(autoincrement())
+  title     String
+  content   String
+  priority  NoticePriority @default(normal)
+  isActive  Boolean        @default(true)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
 }
 
-// ============ ENUMS ============
 enum UserRole {
   user
   admin
